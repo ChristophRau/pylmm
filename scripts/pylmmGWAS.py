@@ -28,8 +28,8 @@ def outputResult(id,beta,betaSD,ts,ps):
 from optparse import OptionParser,OptionGroup
 usage = """usage: %prog [options] --kfile kinshipFile --[tfile | bfile] plinkFileBase outfileBase
 
-This program provides basic genome-wide association (GWAS) functionality.  You provide a phenotype and genotype file as well as a pre-computed (use pylmmKinship.py) kinship matrix and the program outputs a result file with information about each SNP, including the association p-value.  
-The input file are all standard plink formatted with the first two columns specifiying the individual and family ID.  For the phenotype file, we accept either NA or -9 to denote missing values.  
+This program provides basic genome-wide association (GWAS) functionality.  You provide a phenotype and genotype file as well as a pre-computed (use pylmmKinship.py) kinship matrix and the program outputs a result file with information about each SNP, including the association p-value.
+The input file are all standard plink formatted with the first two columns specifiying the individual and family ID.  For the phenotype file, we accept either NA or -9 to denote missing values.
 
 Basic usage:
 
@@ -88,7 +88,7 @@ advancedGroup.add_option("-v", "--verbose",
                   help="Print extra info")
 
 # Experimental Group Options
-experimentalGroup.add_option("--kfile2", dest="kfile2", 
+experimentalGroup.add_option("--kfile2", dest="kfile2",
                   help="The location of a second kinship file.  This file has the same format as the first kinship.  This might be used if you want to correct for another form of confounding.")
 
 parser.add_option_group(basicGroup)
@@ -104,14 +104,14 @@ from scipy import linalg
 from pylmm.lmm import LMM
 from pylmm import input
 
-if len(args) != 1:  
+if len(args) != 1:
    parser.print_help()
    sys.exit()
 
 outFile = args[0]
 
-if not options.tfile and not options.bfile and not options.emmaFile: 
-#if not options.pfile and not options.tfile and not options.bfile: 
+if not options.tfile and not options.bfile and not options.emmaFile:
+#if not options.pfile and not options.tfile and not options.bfile:
    parser.error("You must provide at least one PLINK input file base (--tfile or --bfile) or an EMMA formatted file (--emmaSNP).")
 if not options.kfile:
    parser.error("Please provide a pre-computed kinship file")
@@ -136,34 +136,34 @@ if options.emmaPheno:
       v = line.strip().split()
       p = []
       for x in v:
-	 try:
-	    p.append(float(x))
-	 except: p.append(np.nan)
+        try:
+            p.append(float(x))
+        except: p.append(np.nan)
       P.append(p)
    f.close()
    IN.phenos = np.array(P).T
 
 # READING Covariate File
-if options.covfile: 
-   if options.verbose: 
+if options.covfile:
+   if options.verbose:
       sys.stderr.write("Reading covariate file...\n")
-   P = IN.getCovariates(options.covfile) 
-   if options.noMean: 
+   P = IN.getCovariates(options.covfile)
+   if options.noMean:
       X0 = P
-   else: 
+   else:
       X0 = np.hstack([np.ones((IN.phenos.shape[0],1)),P])
 elif options.emmaCov:
-   if options.verbose: 
+   if options.verbose:
       sys.stderr.write("Reading covariate file...\n")
-   P = IN.getCovariatesEMMA(options.emmaCov) 
-   if options.noMean: 
+   P = IN.getCovariatesEMMA(options.emmaCov)
+   if options.noMean:
       X0 = P
-   else: 
+   else:
       X0 = np.hstack([np.ones((IN.phenos.shape[0],1)),P])
-else: 
+else:
    X0 = np.ones((IN.phenos.shape[0],1))
 
-if np.isnan(X0).sum(): 
+if np.isnan(X0).sum():
       parser.error("The covariate file %s contains missing values. At this time we are not dealing with this case.  Either remove those individuals with missing values or replace them in some way.")
 
 # READING Kinship - major bottleneck for large datasets
@@ -176,7 +176,7 @@ if options.kfile[-3:] == '.gz':
    F = f.read() # might exhaust mem if the file is huge
    K = np.fromstring(F,sep=' ') # Assume that space separated
    f.close()
-else: 
+else:
    K = np.fromfile(open(options.kfile,'r'),sep=" ")
 K.resize((len(IN.indivs),len(IN.indivs)))
 end = time.time()
@@ -204,7 +204,7 @@ if options.kfile2:
 # Keep will now index into the "full" data to select what we keep (either everything or a subset of non missing data
 Y = IN.phenos[:,options.pheno]
 v = np.isnan(Y)
-keep = True - v
+keep = np.logical_xor(True, v)
 if v.sum():
    if options.verbose: sys.stderr.write("Cleaning the phenotype vector by removing %d individuals...\n" % (v.sum()))
    Y = Y[keep]
@@ -220,7 +220,7 @@ if not v.sum() and options.eigenfile:
    if options.verbose: sys.stderr.write("Loading pre-computed eigendecomposition...\n")
    Kva = np.load(options.eigenfile + ".Kva")
    Kve = np.load(options.eigenfile + ".Kve")
-else: 
+else:
    Kva = []
    Kve = []
 
@@ -230,7 +230,7 @@ if not options.kfile2:  L = LMM(Y,K,Kva,Kve,X0,verbose=options.verbose)
 else:  L = LMM_withK2(Y,K,Kva,Kve,X0,verbose=options.verbose,K2=K2)
 
 # Fit the null model -- if refit is true we will refit for each SNP, so no reason to run here
-if not options.refit: 
+if not options.refit:
    if options.verbose: sys.stderr.write("Computing fit for null model\n")
    L.fit()
    if options.verbose and not options.kfile2: sys.stderr.write("\t heritability=%0.3f, sigma=%0.3f\n" % (L.optH,L.optSigma))
@@ -245,22 +245,22 @@ printOutHead()
 
 for snp,id in IN:
    count += 1
-   if options.verbose and count % 1000 == 0: 
+   if options.verbose and count % 1000 == 0:
       sys.stderr.write("At SNP %d\n" % count)
-      
+
    x = snp[keep].reshape((n,1))
    v = np.isnan(x).reshape((-1,))
    # Check SNPs for missing values
    if v.sum():
       keeps = True - v
       xs = x[keeps,:]
-      if keeps.sum() <= 1 or xs.var() <= 1e-6: 
-	 PS.append(np.nan)
-	 TS.append(np.nan)
-	 outputResult(id,np.nan,np.nan,np.nan,np.nan)
-	 continue
+      if keeps.sum() <= 1 or xs.var() <= 1e-6:
+        PS.append(np.nan)
+        TS.append(np.nan)
+        outputResult(id,np.nan,np.nan,np.nan,np.nan)
+        continue
 
-      # Its ok to center the genotype -  I used options.normalizeGenotype to 
+      # Its ok to center the genotype -  I used options.normalizeGenotype to
       # force the removal of missing genotypes as opposed to replacing them with MAF.
       if not options.normalizeGenotype: xs = (xs - xs.mean()) / np.sqrt(xs.var())
       Ys = Y[keeps]
@@ -270,21 +270,21 @@ for snp,id in IN:
       if options.kfile2: Ls = LMM_withK2(Ys,Ks,X0=X0s,verbose=options.verbose,K2=K2s)
       else: Ls = LMM(Ys,Ks,X0=X0s,verbose=options.verbose)
       if options.refit: Ls.fit(X=xs,REML=options.REML)
-      else: 
+      else:
 	 #try:
-	 Ls.fit(REML=options.REML)
+        Ls.fit(REML=options.REML)
 	 #except: pdb.set_trace()
       ts,ps,beta,betaVar = Ls.association(xs,REML=options.REML,returnBeta=True)
-   else: 
-      if x.var() == 0: 
-	 PS.append(np.nan)
-	 TS.append(np.nan)
-	 outputResult(id,np.nan,np.nan,np.nan,np.nan)
-	 continue
+   else:
+      if x.var() == 0:
+        PS.append(np.nan)
+        TS.append(np.nan)
+        outputResult(id,np.nan,np.nan,np.nan,np.nan)
+        continue
 
       if options.refit: L.fit(X=x,REML=options.REML)
       ts,ps,beta,betaVar = L.association(x,REML=options.REML,returnBeta=True)
-	    
+
    outputResult(id,beta,np.sqrt(betaVar).sum(),ts,ps)
    PS.append(ps)
    TS.append(ts)

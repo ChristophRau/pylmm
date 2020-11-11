@@ -51,7 +51,7 @@ parser.add_option_group(basicGroup)
 #parser.add_option_group(advancedGroup)
 
 (options, args) = parser.parse_args()
-if len(args) != 1: 
+if len(args) != 1:
    parser.print_help()
    sys.exit()
 
@@ -64,14 +64,14 @@ from scipy import linalg
 from pylmm.lmm import calculateKinship
 from pylmm import input
 
-if not options.tfile and not options.bfile and not options.emmaFile: 
+if not options.tfile and not options.bfile and not options.emmaFile:
    parser.error("You must provide at least one PLINK input file base (--tfile or --bfile) or an emma formatted file (--emmaSNP).")
 
 if options.verbose: sys.stderr.write("Reading PLINK input...\n")
 if options.bfile: IN = input.plink(options.bfile,type='b')
 elif options.tfile: IN = input.plink(options.tfile,type='t')
 #elif options.pfile: IN = input.plink(options.pfile,type='p')
-elif options.emmaFile: 
+elif options.emmaFile:
    if not options.numSNPs: parser.error("You must provide the number of SNPs when specifying an emma formatted file.")
    IN = input.plink(options.emmaFile,type='emma')
 else: parser.error("You must provide at least one PLINK input file base (--tfile or --bfile) or an emma formatted file (--emmaSNP).")
@@ -88,24 +88,24 @@ K = None
 while i < IN.numSNPs:
    j = 0
    while j < options.computeSize and i < IN.numSNPs:
-      snp,id = IN.next()
+      snp,id = IN.__next__()
       if snp.var() == 0:
-	 i += 1
-	 continue
+        i += 1
+        continue
       W[:,j] = snp
 
       i += 1
       j += 1
-   if j < options.computeSize: W = W[:,range(0,j)] 
+   if j < options.computeSize: W = W[:,range(0,j)]
 
    if options.verbose: sys.stderr.write("Processing first %d SNPs\n" % i)
-   if K == None: 
-      try: 
-	 K = linalg.fblas.dgemm(alpha=1.,a=W.T,b=W.T,trans_a=True,trans_b=False) # calculateKinship(W) * j
-      except AttributeError: K = np.dot(W,W.T) 
+   if K is None:
+      try:
+        K = linalg.fblas.dgemm(alpha=1.,a=W.T,b=W.T,trans_a=True,trans_b=False) # calculateKinship(W) * j
+      except AttributeError: K = np.dot(W,W.T)
    else:
-      try: 
-	 K_j = linalg.fblas.dgemm(alpha=1.,a=W.T,b=W.T,trans_a=True,trans_b=False) # calculateKinship(W) * j
+      try:
+        K_j = linalg.fblas.dgemm(alpha=1.,a=W.T,b=W.T,trans_a=True,trans_b=False) # calculateKinship(W) * j
       except AttributeError: K_j = np.dot(W,W.T)
       K = K + K_j
 
@@ -119,6 +119,6 @@ if options.saveEig:
    if options.verbose: sys.stderr.write("Saving eigendecomposition to %s.[kva | kve]\n" % outFile)
    np.savetxt(outFile+".kva",Kva)
    np.savetxt(outFile+".kve",Kve)
-      
+
 
 

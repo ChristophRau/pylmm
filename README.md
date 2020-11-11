@@ -5,6 +5,8 @@ pylmm is a fast and lightweight linear mixed-model (LMM) solver for use in genom
 
 pylmm has a standalone program for running association studies called pylmmGWAS.  It can also be used as a python module to build your own custom programs.  If you want to create your own code, look at example.py for some basic usage patterns.  If you want to run basic GWAS analysis, the command below, which uses example data might be a helpful guide.
 
+THIS VERSION HAS BEEN UPDATED (11/11/2020) to work on PYTHON 3 and the latest (1.19) version of NUMPY
+
 ### An Example Command:
 
 ```

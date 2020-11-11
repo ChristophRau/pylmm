@@ -20,13 +20,13 @@ You will need to have numpy and scipy installed on your current system.
 You can install pylmm using pip by doing the following 
 
 ```
-   pip install git+https://github.com/nickFurlotte/pylmm
+   pip install git+https://github.com/ChristophRau/pylmm
 ```
 This should make the module pylmm available as well as the two scripts pylmmGWAS.py and pylmmKinship.py.
 
 You can also clone the repository and do a manual install.
 ```
-   git clone https://github.com/nickFurlotte/pylmm
+   git clone https://github.com/ChristophRau/pylmm
    python setup.py install
 ```
 
